@@ -75,7 +75,9 @@ The system consists of multiple specialized agents:
 
 ## 👩‍💻 Team
 - Kusheen Dhar  
-- Team Members (to be added)
+- Rida Fatima
+- Samim Kausar
+- Pawan T Singh
 
 ---
 
