@@ -33,7 +33,7 @@ The system utilizes a split-brain approach to balance performance on local hardw
 
 ---
 
-## 🧠 Technologies Used
+## Technologies Used
 - **LLMs:** Gemini 1.5 Flash (API) & MedGemma 4B (Local via Ollama).
 - **Backend:** FastAPI (Python) with asynchronous task handling.
 - **Database:** MongoDB with Motor (Async driver).
@@ -41,7 +41,7 @@ The system utilizes a split-brain approach to balance performance on local hardw
 
 ---
 
-## 🧪 Implementation Progress
+## Implementation Progress
 - [ ] Multi-agent architecture finalized.
 - [ ] Local MedGemma 4B integration (Ollama).
 - [ ] Pydantic data schemas for Patients & Medications.
@@ -50,7 +50,7 @@ The system utilizes a split-brain approach to balance performance on local hardw
 
 ---
 
-## 📅 Future Enhancements
+## Future Enhancements
 - Voice-based interaction
 - Emergency alert system
 - Wearable device integration
