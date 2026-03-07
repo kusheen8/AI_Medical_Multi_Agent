@@ -1,67 +1,52 @@
-# 🩺 Multi-Agent Medical Support System
+# Multi-Agent Medical Support System (Hybrid AI Edition)
 
-A **multi-agent system powered by Large Language Models (LLMs)** designed to assist **elderly and chronically ill patients** with basic medical guidance, reminders, and coordination.
+A **hybrid multi-agent system** powered by local and cloud-based LLMs, designed to assist **elderly and chronically ill patients** with privacy-first medical guidance and coordination.
 
-> ⚠️ This project is for **educational and research purposes only** and does not replace professional medical advice.
-
----
-
-## 📌 Problem Statement
-Elderly and chronically ill individuals often face challenges such as:
-- Forgetting medications
-- Difficulty understanding medical instructions
-- Limited access to immediate assistance
-- Managing multiple health-related tasks
-
-This project aims to address these issues using a **multi-agent LLM-based approach**.
+>  **Disclaimer:** This project is for educational purposes only. Local medical analysis is performed by MedGemma and does not replace professional clinical judgment.
 
 ---
 
-## 🎯 Project Objective
-To build a **single-interface chatbot system** where multiple AI agents collaborate to:
-- Monitor health-related inputs
-- Provide basic guidance
-- Assist caregivers and patients
-- Improve healthcare coordination
+## Problem Statement
+Elderly patients require constant monitoring and medication adherence, yet sharing sensitive health data with cloud providers often raises privacy concerns. This project addresses the gap between **AI capability** and **data sovereignty**.
 
 ---
 
-## 🤖 System Overview (Multi-Agent Design)
+## Project Objective
+To build a single-interface system where specialized agents collaborate using a **Hybrid Inference Pipeline**:
+- **Privacy-First:** Local processing of sensitive symptoms and medical history.
+- **Intelligent Routing:** High-level task coordination via cloud-based reasoning.
+- **Real-time Support:** Proactive reminders and caregiver alerts.
 
-The system consists of multiple specialized agents:
+---
 
-- **Patient Interaction Agent**  
-  Handles user queries and conversations in simple language.
+## System Architecture & Agent Roles
 
-- **Medication Reminder Agent**  
-  Sends reminders for medicines and dosage schedules.
+The system utilizes a split-brain approach to balance performance on local hardware (RTX 3070 Ti) with cloud intelligence.
 
-- **Health Monitoring Agent**  
-  Tracks symptoms and flags abnormal conditions.
+### Cloud Agents (Gemini 1.5 Flash)
+- **LLM Coordinator Agent:** The central router that determines user intent and delegates tasks.
+- **Caregiver Notification Agent:** Logic-heavy agent that manages emergency alerts and communication.
 
-- **Caregiver Notification Agent**  
-  Alerts caregivers when attention is required.
-
-- **LLM Coordinator Agent**  
-  Manages communication between agents and ensures consistent responses.
+### Local Agents (MedGemma 4B via Ollama)
+- **Medical Analyzer Agent:** Performs clinical entity extraction and symptom analysis locally to ensure patient data never leaves the device.
+- **History Summarizer:** Processes long-term patient logs to identify health trends without cloud exposure.
 
 ---
 
 ## 🧠 Technologies Used
-- Large Language Models (LLMs)
-- Python
-- FastAPI (Backend)
-- React (Frontend – planned)
-- MongoDB (Data storage – planned)
-- Docker (Deployment – planned)
+- **LLMs:** Gemini 1.5 Flash (API) & MedGemma 4B (Local via Ollama).
+- **Backend:** FastAPI (Python) with asynchronous task handling.
+- **Database:** MongoDB with Motor (Async driver).
+- **Optimization:** Q4_K_M Quantization for local inference on 8GB VRAM.
 
 ---
 
-## 🧪 Current Project Status
-- ✅ Idea finalized
-- ✅ System architecture planned
-- ⏳ Development in progress
-- ⏳ UI & agent integration pending
+## 🧪 Implementation Progress
+- [ ] Multi-agent architecture finalized.
+- [ ] Local MedGemma 4B integration (Ollama).
+- [ ] Pydantic data schemas for Patients & Medications.
+- [ ] Hybrid routing logic (Gemini Coordinator <-> MedGemma).
+- [ ] UI & Frontend integration.
 
 ---
 
@@ -82,4 +67,4 @@ The system consists of multiple specialized agents:
 ---
 
 ## 📄 License
-This project is developed as part of an **academic coursework project**.
+Academic coursework project - Developed at Nitte Meenakshi Institute of Technology.
