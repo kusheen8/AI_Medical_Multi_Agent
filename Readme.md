@@ -42,47 +42,53 @@ The system utilizes a split-brain approach to balance performance on local hardw
 ---
 
 ## Environment Setup
-
+ 
 1. Create your local env file from the template:
-	- `cp .env.example .env` (Linux/macOS)
-	- `copy .env.example .env` (Windows CMD)
-	- `Copy-Item .env.example .env` (PowerShell)
-2. Fill in `GEMINI_API_KEY` from Google AI Studio.
-3. Fill in `MONGODB_URI` from your MongoDB Atlas connection string.
-4. Make sure Ollama is running locally at `http://localhost:11434` and the model in `OLLAMA_MODEL` is pulled.
-
-Minimum required values to run this stack:
-- `GEMINI_API_KEY`
-- `MONGODB_URI`
-- `OLLAMA_BASE_URL`
-- `OLLAMA_MODEL`
-
----
-
-## Implementation Progress
-- [ ] Multi-agent architecture finalized.
-- [ ] Local MedGemma 4B integration (Ollama).
-- [ ] Pydantic data schemas for Patients & Medications.
-- [ ] Hybrid routing logic (Gemini Coordinator <-> MedGemma).
-- [ ] UI & Frontend integration.
-
----
-
-## Future Enhancements
-- Voice-based interaction
-- Emergency alert system
-- Wearable device integration
-- Multilingual support
-
----
-
-## 👩‍💻 Team
-- Kusheen Dhar  
-- Rida Fatima
-- Samim Kausar
-- Pawan T Singh
-
----
-
-## 📄 License
-Academic coursework project - Developed at Nitte Meenakshi Institute of Technology.
+ 	- `cp .env.example .env` (Linux/macOS)
+ 	- `copy .env.example .env` (Windows CMD)
+ 	- `Copy-Item .env.example .env` (PowerShell)
+ 2. Fill in `GEMINI_API_KEY` from Google AI Studio.
+ 3. Fill in `MONGODB_URI` from your MongoDB Atlas connection string.
+ 4. Make sure Ollama is running locally at `http://localhost:11434` and the model in `OLLAMA_MODEL` is pulled.
+ 
+ Minimum required values to run this stack:
+ - `GEMINI_API_KEY`
+ - `MONGODB_URI`
+ - `OLLAMA_BASE_URL`
+ - `OLLAMA_MODEL`
+ 
+ ---
+ 
+ ## Local Model Testing
+ - Test MedGemma 4B integration: `python backend/test_medgemma.py`
+ - This verifies Ollama connectivity and model responsiveness
+ 
+ ---
+ 
+ ## Implementation Progress
+ - [ ] Multi-agent architecture finalized.
+ - [ ] Local MedGemma 4B integration (Ollama).
+ - [ ] Pydantic data schemas for Patients & Medications.
+ - [ ] Hybrid routing logic (Gemini Coordinator <-> MedGemma).
+ - [ ] UI & Frontend integration.
+ 
+ ---
+ 
+ ## Future Enhancements
+ - Voice-based interaction
+ - Emergency alert system
+ - Wearable device integration
+ - Multilingual support
+ 
+ ---
+ 
+ ## Team
+ - Kusheen Dhar   
+ - Rida Fatima
+ - Samim Kausar
+ - Pawan T Singh
+ 
+ ---
+ 
+ ## License
+ Academic coursework project - Developed at Nitte Meenakshi Institute of Technology.

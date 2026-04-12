@@ -9,7 +9,7 @@
 - Ensure Ollama is running locally with the specified model pulled
 
 ## Local Model Testing
-- Test MedGemma 4B integration: `python test_medgemma.py`
+- Test MedGemma 4B integration: `python backend/test_medgemma.py`
 - This verifies Ollama connectivity and model responsiveness
 
 ## Important Notes
