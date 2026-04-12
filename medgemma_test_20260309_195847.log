@@ -1,0 +1,32 @@
+2026-03-09 19:58:47,485 - INFO - ============================================================
+2026-03-09 19:58:47,485 - INFO - MedGemma Diagnostic Test
+2026-03-09 19:58:47,485 - INFO - ============================================================
+2026-03-09 19:58:47,486 - INFO - 
+[1] Checking Ollama connection...
+2026-03-09 19:58:47,530 - INFO -   - MedAIBase/MedGemma1.5:4b (3.9B)
+2026-03-09 19:58:47,531 - INFO - 
+[2] Testing medical query...
+2026-03-09 19:59:06,090 - INFO - 
+Response preview:
+2026-03-09 19:59:06,090 - INFO - Here are 3 common symptoms of hypertension (high blood pressure):
+
+1.  **Headaches:** Often described as persistent or severe headaches, especially in the forehead or back of the head.
+2.  **Dizziness...
+2026-03-09 19:59:06,091 - INFO - 
+Full metrics:
+2026-03-09 19:59:06,091 - INFO -   - Total duration: 18433282900 ns
+2026-03-09 19:59:06,092 - INFO -   - Load duration: 702658000 ns
+2026-03-09 19:59:06,092 - INFO -   - Prompt eval count: 27
+2026-03-09 19:59:06,092 - INFO -   - Eval count: 149
+2026-03-09 19:59:06,092 - INFO - 
+[3] Testing medical entity extraction...
+2026-03-09 19:59:09,192 - INFO - 
+Extracted entities:
+2026-03-09 19:59:09,193 - INFO - Symptoms: headache, fever, fatigue
+Duration: 3 days
+Severity: persistent
+2026-03-09 19:59:09,194 - INFO - 
+============================================================
+2026-03-09 19:59:09,203 - INFO - ============================================================
+2026-03-09 19:59:09,204 - INFO - 
+Log file saved to: medgemma_test_20260309_195847.log
