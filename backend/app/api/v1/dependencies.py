@@ -1,0 +1,45 @@
+"""
+FastAPI dependency injection helpers for API v1 routes.
+
+Provides repository instances via ``Depends()`` by extracting the
+shared ``db_client`` from ``request.app.state`` (set during lifespan).
+"""
+
+from typing import Any
+
+from fastapi import Request
+
+from app.db.client import AsyncMongoClient
+from app.db.repositories.alert_repository import AlertRepository
+from app.db.repositories.audit_repository import AuditRepository
+from app.db.repositories.medical_record_repository import MedicalRecordRepository
+from app.db.repositories.patient_repository import PatientRepository
+
+
+def get_db_client(request: Request) -> AsyncMongoClient:
+    """Extract the shared AsyncMongoClient from app state."""
+    return request.app.state.db_client
+
+
+def get_patient_repository(request: Request) -> PatientRepository:
+    """Build a PatientRepository using the shared DB client."""
+    db_client: AsyncMongoClient = request.app.state.db_client
+    return PatientRepository(db_client)
+
+
+def get_medical_record_repository(request: Request) -> MedicalRecordRepository:
+    """Build a MedicalRecordRepository using the shared DB client."""
+    db_client: AsyncMongoClient = request.app.state.db_client
+    return MedicalRecordRepository(db_client)
+
+
+def get_alert_repository(request: Request) -> AlertRepository:
+    """Build an AlertRepository using the shared DB client."""
+    db_client: AsyncMongoClient = request.app.state.db_client
+    return AlertRepository(db_client)
+
+
+def get_audit_repository(request: Request) -> AuditRepository:
+    """Build an AuditRepository using the shared DB client."""
+    db_client: AsyncMongoClient = request.app.state.db_client
+    return AuditRepository(db_client)
