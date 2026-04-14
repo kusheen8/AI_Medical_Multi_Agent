@@ -1,53 +1,46 @@
 # Core Framework
-fastapi==0.135.1
-uvicorn[standard]==0.41.0
-pydantic==2.12.5
-pydantic-settings==2.5.0
+fastapi==0.115.12
+uvicorn[standard]==0.34.2
+pydantic==2.11.1
+pydantic-settings==2.8.1
 
 # Database
-motor==3.7.1  # Note: Motor is deprecated and will be removed on May 14, 2026. Consider migrating to PyMongo Async driver
-pymongo==4.16.0
+motor==3.7.1  # Note: Motor is deprecated (removal May 14, 2026). Abstraction layer in db/client.py enables PyMongo async migration.
+pymongo[srv]==4.12.1
 
-# Google Gemini API - DEPRECATED
-# Note: google-generativeai is deprecated. Migrate to the new Google Generative AI SDK
-# Install new SDK: pip install google-genai
-# Migration guide: https://ai.google.dev/gemini-api/docs/migrate
-google-generativeai==0.8.6
-google-ai-generativelanguage==0.6.0
+# Google Gemini API (new SDK — replaces deprecated google-generativeai)
+google-genai==1.14.0
 
 # Local LLM (Ollama)
 ollama==0.6.1
 
 # HTTP Client
 httpx==0.28.1
-aiohttp==3.13.3
 
 # Data Processing
-python-dotenv==1.0.1
-python-dateutil==2.9.0.post0
+python-dotenv==1.1.0
 
 # Async Support
-# Note: asyncio is built-in to Python, no need to pin it separately
 aiofiles==24.1.0
 
-# Logging & Monitoring
-loguru==0.7.2
+# Structured Logging
+structlog==25.1.0
 
 # Validation & Serialization
 email-validator==2.2.0
-python-multipart==0.0.9
+python-multipart==0.0.20
 
 # Security
-python-jose[cryptography]==3.3.0
+python-jose[cryptography]==3.4.0
 passlib[bcrypt]==1.7.4
-bcrypt==4.2.1
+bcrypt==4.3.0
 
-# Testing (Optional)
-pytest==8.2.2
-pytest-asyncio==0.24.0
-httpx-mock==0.16.1
+# Testing
+pytest==8.3.5
+pytest-asyncio==0.26.0
+pytest-cov==6.1.1
 
-# Development (Optional)
-black==24.10.0
-flake8==7.1.1
-mypy==1.14.1
+# Development
+black==25.1.0
+flake8==7.2.0
+mypy==1.15.0
