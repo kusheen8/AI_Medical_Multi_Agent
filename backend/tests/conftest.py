@@ -8,6 +8,7 @@ Provides:
 - test_app / test_client: FastAPI TestClient with overridden dependencies
 - Sample data factories: sample_patient_data, sample_record_data, sample_alert_data
 - Phase 3 fixtures: sample_trace_data, sample_task_data, mock_task_queue
+- Phase 4 fixtures: mock_notifier, mock_policy_engine, mock_metrics, mock_dlq
 """
 
 import os
@@ -40,6 +41,8 @@ def test_settings() -> Settings:
         MONGODB_DB_NAME="test_ai_medical",
         OLLAMA_BASE_URL="http://localhost:11434",
         OLLAMA_MODEL="medgemma:4b",
+        ADMIN_API_KEY="test-admin-key",
+        NOTIFICATION_DRY_RUN=True,
     )
 
 
@@ -54,6 +57,7 @@ def mock_collection() -> MagicMock:
     collection.find_one = AsyncMock()
     collection.find_one_and_update = AsyncMock()
     collection.delete_one = AsyncMock()
+    collection.delete_many = AsyncMock()
     collection.count_documents = AsyncMock(return_value=0)
     collection.create_index = AsyncMock()
 
@@ -96,6 +100,7 @@ def test_app(mock_db_client: MagicMock, test_settings: Settings) -> Any:
 
         app = create_app()
         app.state.db_client = mock_db_client
+        app.state.settings = test_settings
         app.state.health_service = MagicMock()
         # Phase 3: task queue mock
         mock_queue = MagicMock()
@@ -107,6 +112,31 @@ def test_app(mock_db_client: MagicMock, test_settings: Settings) -> Any:
         mock_queue.recover_pending = AsyncMock(return_value=0)
         mock_queue.pending_count = 0
         app.state.task_queue = mock_queue
+        # Phase 4: notification-related mocks
+        app.state.caregiver_notifier = MagicMock()
+        app.state.caregiver_notifier.dispatch = AsyncMock(return_value=[])
+        app.state.policy_engine = MagicMock()
+        app.state.policy_engine.evaluate = AsyncMock(return_value=[])
+        app.state.metrics_collector = MagicMock()
+        app.state.metrics_collector.record_alert_created = MagicMock()
+        app.state.metrics_collector.record_delivery_attempt = MagicMock()
+        app.state.metrics_collector.set_queue_length = MagicMock()
+        app.state.metrics_collector.get_prometheus_format = MagicMock(
+            return_value="# test metrics\nalert_created_total 0\n"
+        )
+        app.state.metrics_collector.get_summary = MagicMock(return_value={
+            "alerts": {"total_created": 0},
+            "delivery": {},
+            "queue": {"length": 0},
+            "circuit_breakers": {},
+        })
+        app.state.dlq_manager = MagicMock()
+        app.state.dlq_manager.get_count = AsyncMock(return_value=0)
+        app.state.dlq_manager.list_dlq = AsyncMock(return_value={
+            "items": [], "total": 0, "page": 1, "page_size": 20, "pages": 0,
+        })
+        app.state.dlq_manager.get_dlq_item = AsyncMock(return_value=None)
+        app.state.dlq_manager.mark_retried = AsyncMock(return_value=True)
         return app
 
 
@@ -199,6 +229,9 @@ def sample_alert_doc() -> dict[str, Any]:
         "channels": ["sms", "email"],
         "status": "pending",
         "delivery_receipts": [],
+        "idempotency_key": None,
+        "acknowledged_at": None,
+        "acknowledged_by": None,
         "created_at": datetime(2026, 3, 1, 12, 0, 0, tzinfo=timezone.utc),
         "updated_at": datetime(2026, 3, 1, 12, 0, 0, tzinfo=timezone.utc),
     }
@@ -268,3 +301,47 @@ def sample_task_doc() -> dict[str, Any]:
         "updated_at": datetime(2026, 4, 1, 14, 0, 0, tzinfo=timezone.utc),
     }
 
+
+# ── Phase 4 fixtures ───────────────────────────────────────────────────
+
+
+SAMPLE_POLICY_RULE_ID = str(ObjectId())
+SAMPLE_DLQ_ID = str(ObjectId())
+
+
+@pytest.fixture
+def sample_policy_rule_doc() -> dict[str, Any]:
+    """Return a policy rule document as it would appear in MongoDB."""
+    return {
+        "_id": ObjectId(SAMPLE_POLICY_RULE_ID),
+        "name": "Critical Risk Emergency Alert",
+        "description": "Immediate alert for critical risk assessments.",
+        "condition_type": "risk_threshold",
+        "risk_level": "critical",
+        "threshold_params": {"min_risk_level": "critical"},
+        "action": "escalate",
+        "severity": "critical",
+        "channels": ["sms", "email", "push"],
+        "enabled": True,
+        "dry_run": False,
+        "version": 1,
+        "created_at": datetime(2026, 4, 1, 10, 0, 0, tzinfo=timezone.utc),
+        "updated_at": datetime(2026, 4, 1, 10, 0, 0, tzinfo=timezone.utc),
+    }
+
+
+@pytest.fixture
+def sample_dlq_doc() -> dict[str, Any]:
+    """Return a DLQ entry document."""
+    return {
+        "_id": ObjectId(SAMPLE_DLQ_ID),
+        "notification_id": str(ObjectId()),
+        "alert_id": SAMPLE_ALERT_ID,
+        "channel": "sms",
+        "error": "Connection timeout",
+        "attempts": 3,
+        "status": "pending",
+        "metadata": {},
+        "created_at": datetime(2026, 4, 1, 15, 0, 0, tzinfo=timezone.utc),
+        "updated_at": datetime(2026, 4, 1, 15, 0, 0, tzinfo=timezone.utc),
+    }

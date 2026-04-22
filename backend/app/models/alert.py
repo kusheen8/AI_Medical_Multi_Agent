@@ -47,6 +47,13 @@ class DeliveryReceipt(BaseModel):
         description="When the delivery was attempted.",
     )
     error: str | None = Field(default=None, description="Error message if delivery failed.")
+    provider_response_code: int | None = Field(
+        default=None, description="HTTP status code from the provider."
+    )
+    provider_message_id: str | None = Field(
+        default=None, description="Message ID assigned by the provider."
+    )
+    retry_count: int = Field(default=0, description="Number of retry attempts for this channel.")
 
 
 class AlertCreate(BaseModel):
@@ -113,6 +120,15 @@ class AlertInDB(TimestampMixin):
     channels: list[str]
     status: AlertStatus = AlertStatus.PENDING
     delivery_receipts: list[DeliveryReceipt] = Field(default_factory=list)
+    idempotency_key: str | None = Field(
+        default=None, description="Idempotency key to prevent duplicate alerts."
+    )
+    acknowledged_at: datetime | None = Field(
+        default=None, description="When the alert was acknowledged by a caregiver."
+    )
+    acknowledged_by: str | None = Field(
+        default=None, description="ID/name of the caregiver who acknowledged."
+    )
 
 
 class AlertResponse(BaseModel):
@@ -125,6 +141,9 @@ class AlertResponse(BaseModel):
     channels: list[str] = Field(json_schema_extra={"example": ["sms", "email"]})
     status: AlertStatus = Field(json_schema_extra={"example": "pending"})
     delivery_receipts: list[DeliveryReceipt] = Field(default_factory=list)
+    idempotency_key: str | None = Field(default=None)
+    acknowledged_at: datetime | None = Field(default=None)
+    acknowledged_by: str | None = Field(default=None)
     created_at: datetime = Field(json_schema_extra={"example": "2026-03-01T12:00:00Z"})
     updated_at: datetime = Field(json_schema_extra={"example": "2026-03-01T12:00:00Z"})
 
@@ -142,6 +161,9 @@ class AlertResponse(BaseModel):
             channels=doc.get("channels", []),
             status=doc.get("status", AlertStatus.PENDING),
             delivery_receipts=receipts,
+            idempotency_key=doc.get("idempotency_key"),
+            acknowledged_at=doc.get("acknowledged_at"),
+            acknowledged_by=doc.get("acknowledged_by"),
             created_at=doc.get("created_at", datetime.now(timezone.utc)),
             updated_at=doc.get("updated_at", datetime.now(timezone.utc)),
         )

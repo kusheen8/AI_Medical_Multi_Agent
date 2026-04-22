@@ -1,0 +1,62 @@
+[
+  {
+    "name": "Critical Risk Emergency Alert",
+    "description": "Immediate alert for critical risk assessments.",
+    "condition_type": "risk_threshold",
+    "risk_level": "critical",
+    "threshold_params": {"min_risk_level": "critical"},
+    "action": "escalate",
+    "severity": "critical",
+    "channels": ["sms", "email", "push"],
+    "enabled": true,
+    "dry_run": false
+  },
+  {
+    "name": "High Risk Urgent Alert",
+    "description": "Urgent notification for high risk assessments.",
+    "condition_type": "risk_threshold",
+    "risk_level": "high",
+    "threshold_params": {"min_risk_level": "high"},
+    "action": "alert",
+    "severity": "error",
+    "channels": ["sms", "email"],
+    "enabled": true,
+    "dry_run": false
+  },
+  {
+    "name": "Medium Risk Info Notification",
+    "description": "Informational notification for medium risk assessments.",
+    "condition_type": "risk_threshold",
+    "risk_level": "medium",
+    "threshold_params": {"min_risk_level": "medium"},
+    "action": "info",
+    "severity": "warning",
+    "channels": ["email"],
+    "enabled": true,
+    "dry_run": false
+  },
+  {
+    "name": "Emergency Symptom Pattern",
+    "description": "Immediate alert when symptoms match known emergency patterns.",
+    "condition_type": "emergency_pattern",
+    "risk_level": "high",
+    "threshold_params": {"patterns": []},
+    "action": "escalate",
+    "severity": "critical",
+    "channels": ["sms", "email", "push"],
+    "enabled": true,
+    "dry_run": false
+  },
+  {
+    "name": "Consecutive High Risk Escalation",
+    "description": "Escalate when 3+ consecutive records are high risk.",
+    "condition_type": "consecutive_high",
+    "risk_level": "high",
+    "threshold_params": {"consecutive_count": 3, "check_level": "high"},
+    "action": "escalate",
+    "severity": "critical",
+    "channels": ["sms", "email"],
+    "enabled": true,
+    "dry_run": false
+  }
+]

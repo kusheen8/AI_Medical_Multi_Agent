@@ -52,6 +52,30 @@ class Settings(BaseSettings):
     # ── Worker Pool ──
     WORKER_CONCURRENCY: int = 2
 
+    # ── Notification Providers (Phase 4) ──
+    TWILIO_ACCOUNT_SID: str = ""
+    TWILIO_AUTH_TOKEN: str = ""
+    TWILIO_FROM_NUMBER: str = ""
+    SENDGRID_API_KEY: str = ""
+    SENDGRID_FROM_EMAIL: str = ""
+    FCM_SERVER_KEY: str = ""
+
+    # ── Webhook & Security (Phase 4) ──
+    WEBHOOK_SIGNING_SECRET: str = ""
+    ADMIN_API_KEY: str = "dev-admin-key"
+
+    # ── Notification Behavior (Phase 4) ──
+    NOTIFICATION_DRY_RUN: bool = True
+
+    # ── Alert Retry Config (Phase 4) ──
+    ALERT_RETRY_MAX_ATTEMPTS: int = 3
+    ALERT_RETRY_BASE_DELAY: float = 5.0
+    ALERT_RETRY_MULTIPLIER: float = 2.0
+
+    # ── Circuit Breaker Config (Phase 4) ──
+    CIRCUIT_BREAKER_FAILURE_THRESHOLD: int = 5
+    CIRCUIT_BREAKER_RECOVERY_TIMEOUT: float = 30.0
+
     @property
     def is_production(self) -> bool:
         """Check if running in production mode."""
@@ -61,6 +85,13 @@ class Settings(BaseSettings):
     def is_development(self) -> bool:
         """Check if running in development mode."""
         return self.APP_ENV == "development"
+
+    @property
+    def notification_dry_run_effective(self) -> bool:
+        """Resolve effective dry-run state (always True in dev unless overridden)."""
+        if self.is_development:
+            return True
+        return self.NOTIFICATION_DRY_RUN
 
 
 @lru_cache()
