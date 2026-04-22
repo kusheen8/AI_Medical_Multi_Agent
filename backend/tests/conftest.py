@@ -7,6 +7,7 @@ Provides:
 - mock_collection: Reusable mocked Motor collection
 - test_app / test_client: FastAPI TestClient with overridden dependencies
 - Sample data factories: sample_patient_data, sample_record_data, sample_alert_data
+- Phase 3 fixtures: sample_trace_data, sample_task_data, mock_task_queue
 """
 
 import os
@@ -96,6 +97,16 @@ def test_app(mock_db_client: MagicMock, test_settings: Settings) -> Any:
         app = create_app()
         app.state.db_client = mock_db_client
         app.state.health_service = MagicMock()
+        # Phase 3: task queue mock
+        mock_queue = MagicMock()
+        mock_queue.enqueue = AsyncMock(return_value=str(ObjectId()))
+        mock_queue.get_task = AsyncMock(return_value=None)
+        mock_queue.dequeue = AsyncMock(return_value=None)
+        mock_queue.mark_done = AsyncMock()
+        mock_queue.mark_failed = AsyncMock()
+        mock_queue.recover_pending = AsyncMock(return_value=0)
+        mock_queue.pending_count = 0
+        app.state.task_queue = mock_queue
         return app
 
 
@@ -191,3 +202,69 @@ def sample_alert_doc() -> dict[str, Any]:
         "created_at": datetime(2026, 3, 1, 12, 0, 0, tzinfo=timezone.utc),
         "updated_at": datetime(2026, 3, 1, 12, 0, 0, tzinfo=timezone.utc),
     }
+
+
+# ── Phase 3 fixtures ───────────────────────────────────────────────────
+
+SAMPLE_TRACE_ID = str(ObjectId())
+SAMPLE_TASK_ID = str(ObjectId())
+
+
+@pytest.fixture
+def sample_trace_data() -> dict[str, Any]:
+    """Return a valid reasoning trace creation payload."""
+    return {
+        "task_type": "symptom_analysis",
+        "instructions": "Analyze cardiovascular symptoms and assess risk.",
+        "allowed_data_classes": ["vitals", "symptoms", "medications"],
+        "origin": "gemini_coordinator",
+        "expires_at": datetime(2026, 4, 2, 13, 0, 0, tzinfo=timezone.utc),
+    }
+
+
+@pytest.fixture
+def sample_trace_doc() -> dict[str, Any]:
+    """Return a reasoning trace document as it would appear in MongoDB."""
+    return {
+        "_id": ObjectId(SAMPLE_TRACE_ID),
+        "task_type": "symptom_analysis",
+        "instructions": "Analyze cardiovascular symptoms and assess risk.",
+        "allowed_data_classes": ["vitals", "symptoms", "medications"],
+        "origin": "gemini_coordinator",
+        "task_id": SAMPLE_TASK_ID,
+        "patient_id": SAMPLE_PATIENT_ID,
+        "expires_at": datetime(2026, 4, 2, 13, 0, 0, tzinfo=timezone.utc),
+        "created_at": datetime(2026, 4, 1, 13, 0, 0, tzinfo=timezone.utc),
+        "updated_at": datetime(2026, 4, 1, 13, 0, 0, tzinfo=timezone.utc),
+    }
+
+
+@pytest.fixture
+def sample_task_data() -> dict[str, Any]:
+    """Return a valid task creation payload."""
+    return {
+        "task_type": "symptom_analysis",
+        "patient_id": SAMPLE_PATIENT_ID,
+        "payload": {"symptoms": "Chest pain, shortness of breath"},
+    }
+
+
+@pytest.fixture
+def sample_task_doc() -> dict[str, Any]:
+    """Return a task document as it would appear in MongoDB."""
+    return {
+        "_id": ObjectId(SAMPLE_TASK_ID),
+        "task_type": "symptom_analysis",
+        "patient_id": SAMPLE_PATIENT_ID,
+        "payload": {"symptoms": "Chest pain, shortness of breath"},
+        "status": "queued",
+        "priority": 2,
+        "retries": 0,
+        "max_retries": 3,
+        "result": None,
+        "error": None,
+        "trace_id": None,
+        "created_at": datetime(2026, 4, 1, 14, 0, 0, tzinfo=timezone.utc),
+        "updated_at": datetime(2026, 4, 1, 14, 0, 0, tzinfo=timezone.utc),
+    }
+

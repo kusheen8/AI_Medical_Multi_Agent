@@ -14,6 +14,8 @@ from app.db.repositories.alert_repository import AlertRepository
 from app.db.repositories.audit_repository import AuditRepository
 from app.db.repositories.medical_record_repository import MedicalRecordRepository
 from app.db.repositories.patient_repository import PatientRepository
+from app.db.repositories.trace_repository import TraceRepository
+from app.services.queue.task_queue import TaskQueue
 
 
 def get_db_client(request: Request) -> AsyncMongoClient:
@@ -43,3 +45,14 @@ def get_audit_repository(request: Request) -> AuditRepository:
     """Build an AuditRepository using the shared DB client."""
     db_client: AsyncMongoClient = request.app.state.db_client
     return AuditRepository(db_client)
+
+
+def get_trace_repository(request: Request) -> TraceRepository:
+    """Build a TraceRepository using the shared DB client."""
+    db_client: AsyncMongoClient = request.app.state.db_client
+    return TraceRepository(db_client)
+
+
+def get_task_queue(request: Request) -> TaskQueue:
+    """Extract the TaskQueue from app state."""
+    return request.app.state.task_queue

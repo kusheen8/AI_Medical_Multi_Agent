@@ -43,6 +43,14 @@ class Settings(BaseSettings):
     # ── Local LLM via Ollama (required) ──
     OLLAMA_BASE_URL: str = "http://localhost:11434"
     OLLAMA_MODEL: str = "medgemma:4b"
+    OLLAMA_TIMEOUT: int = 30
+
+    # ── Cloud Coordinator ──
+    GEMINI_MODEL: str = "gemini-1.5-flash"
+    COORDINATOR_TIMEOUT: int = 5
+
+    # ── Worker Pool ──
+    WORKER_CONCURRENCY: int = 2
 
     @property
     def is_production(self) -> bool:
