@@ -7,14 +7,15 @@ Provides operational visibility for system administrators:
 - GET  /api/v1/admin/queue/tasks     — Active queue tasks
 - POST /api/v1/admin/dlq/retry/{id}  — Manually retry a DLQ item
 
-All endpoints require ``X-Admin-Key`` header for authentication (Phase 5
-will upgrade this to JWT/RBAC).
+Endpoints accept both JWT bearer tokens (admin role) and legacy
+``X-Admin-Key`` header for backward compatibility.
 """
 
 from typing import Any
 
 from bson import ObjectId
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from app.api.v1.dependencies import get_alert_repository
 from app.db.repositories.alert_repository import AlertRepository
@@ -22,36 +23,68 @@ from app.models.alert import AlertResponse, AlertStatus
 
 router = APIRouter(prefix="/api/v1/admin", tags=["admin"])
 
+_bearer_scheme = HTTPBearer(auto_error=False)
+
 
 # ── Admin Auth Dependency ────────────────────────────────────────────────
 
 
-async def verify_admin_key(
+async def verify_admin_access(
     request: Request,
-    x_admin_key: str = Header(
-        ...,
+    credentials: HTTPAuthorizationCredentials | None = Depends(_bearer_scheme),
+    x_admin_key: str | None = Header(
+        default=None,
         alias="X-Admin-Key",
-        description="Admin API key for authentication.",
+        description="Legacy admin API key (deprecated — use JWT instead).",
     ),
 ) -> str:
-    """Verify the admin API key.
+    """Verify admin access via JWT (preferred) or legacy API key.
 
-    Phase 5 will replace this with proper JWT/RBAC authentication.
+    Checks JWT bearer token first. If not present, falls back to
+    X-Admin-Key header for backward compatibility.
 
     Returns:
-        The validated admin key.
+        The authenticated admin identifier.
     """
-    settings = getattr(request.app.state, "settings", None)
-    expected_key = ""
-    if settings:
-        expected_key = getattr(settings, "ADMIN_API_KEY", "")
+    # Try JWT first
+    if credentials is not None:
+        try:
+            from app.core.security import decode_token
+            from app.models.user import UserRole
+            payload = decode_token(credentials.credentials)
+            if payload.token_type != "access":
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid token type.",
+                )
+            if payload.role != UserRole.ADMIN:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Admin role required.",
+                )
+            return payload.sub
+        except HTTPException:
+            raise
+        except Exception:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid or expired token.",
+            )
 
-    if not expected_key or x_admin_key != expected_key:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Invalid admin API key.",
-        )
-    return x_admin_key
+    # Fallback to legacy API key
+    if x_admin_key:
+        settings = getattr(request.app.state, "settings", None)
+        expected_key = ""
+        if settings:
+            expected_key = getattr(settings, "ADMIN_API_KEY", "")
+
+        if expected_key and x_admin_key == expected_key:
+            return "admin-api-key"
+
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="Admin access required. Provide a valid JWT or X-Admin-Key.",
+    )
 
 
 # ── Endpoints ────────────────────────────────────────────────────────────
@@ -61,7 +94,7 @@ async def verify_admin_key(
     "/health/summary",
     summary="System health summary",
     description="Overall system status including queue, circuit breakers, and delivery rates.",
-    dependencies=[Depends(verify_admin_key)],
+    dependencies=[Depends(verify_admin_access)],
 )
 async def admin_health_summary(request: Request) -> dict[str, Any]:
     """Return comprehensive system health summary."""
@@ -101,7 +134,7 @@ async def admin_health_summary(request: Request) -> dict[str, Any]:
     response_model=list[AlertResponse],
     summary="Failed alerts",
     description="List alerts that failed delivery awaiting retry.",
-    dependencies=[Depends(verify_admin_key)],
+    dependencies=[Depends(verify_admin_access)],
 )
 async def admin_failed_alerts(
     alert_repo: AlertRepository = Depends(get_alert_repository),
@@ -116,7 +149,7 @@ async def admin_failed_alerts(
     "/queue/tasks",
     summary="Active queue tasks",
     description="List tasks currently in the queue.",
-    dependencies=[Depends(verify_admin_key)],
+    dependencies=[Depends(verify_admin_access)],
 )
 async def admin_queue_tasks(
     request: Request,
@@ -166,7 +199,7 @@ async def admin_queue_tasks(
     "/dlq/retry/{dlq_id}",
     summary="Retry DLQ item",
     description="Manually re-queue a dead-letter queue item for retry.",
-    dependencies=[Depends(verify_admin_key)],
+    dependencies=[Depends(verify_admin_access)],
 )
 async def admin_retry_dlq(
     dlq_id: str,

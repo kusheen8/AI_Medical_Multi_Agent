@@ -2,12 +2,13 @@
 Global exception handlers for API v1.
 
 Maps repository-layer exceptions to appropriate HTTP status codes
-with structured error responses.
+with structured error responses. Includes auth and rate limit handlers (Phase 5).
 """
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from jose import JWTError
 
 from app.db.exceptions import DuplicateError, NotFoundError, RepositoryError
 
@@ -46,12 +47,25 @@ def register_error_handlers(app: FastAPI) -> None:
 
     @app.exception_handler(RepositoryError)
     async def repository_error_handler(request: Request, exc: RepositoryError) -> JSONResponse:
+        # Suppress internal details — never leak DB info
         return JSONResponse(
             status_code=500,
             content={
                 "detail": "An internal error occurred.",
                 "errors": [],
             },
+        )
+
+    @app.exception_handler(JWTError)
+    async def jwt_error_handler(request: Request, exc: JWTError) -> JSONResponse:
+        """Handle JWT validation errors globally."""
+        return JSONResponse(
+            status_code=401,
+            content={
+                "detail": "Invalid or expired authentication token.",
+                "errors": [],
+            },
+            headers={"WWW-Authenticate": "Bearer"},
         )
 
     @app.exception_handler(RequestValidationError)

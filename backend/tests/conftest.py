@@ -9,6 +9,7 @@ Provides:
 - Sample data factories: sample_patient_data, sample_record_data, sample_alert_data
 - Phase 3 fixtures: sample_trace_data, sample_task_data, mock_task_queue
 - Phase 4 fixtures: mock_notifier, mock_policy_engine, mock_metrics, mock_dlq
+- Phase 5 fixtures: auth headers, user data, encryption key
 """
 
 import os
@@ -19,6 +20,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 import pytest_asyncio
 from bson import ObjectId
+from cryptography.fernet import Fernet
 from fastapi.testclient import TestClient
 
 from app.core.config import Settings, get_settings
@@ -26,6 +28,9 @@ from app.db.client import AsyncMongoClient
 
 
 # ── Deterministic settings ──────────────────────────────────────────────
+
+# Pre-generate a Fernet key for test encryption
+_TEST_FERNET_KEY = Fernet.generate_key().decode()
 
 
 @pytest.fixture
@@ -43,6 +48,10 @@ def test_settings() -> Settings:
         OLLAMA_MODEL="medgemma:4b",
         ADMIN_API_KEY="test-admin-key",
         NOTIFICATION_DRY_RUN=True,
+        # Phase 5 settings
+        JWT_SECRET_KEY="test-jwt-secret-key-for-testing-only",
+        FIELD_ENCRYPTION_KEY=_TEST_FERNET_KEY,
+        REQUIRE_AUTH=False,
     )
 
 
@@ -345,3 +354,88 @@ def sample_dlq_doc() -> dict[str, Any]:
         "created_at": datetime(2026, 4, 1, 15, 0, 0, tzinfo=timezone.utc),
         "updated_at": datetime(2026, 4, 1, 15, 0, 0, tzinfo=timezone.utc),
     }
+
+
+# ── Phase 5 fixtures ───────────────────────────────────────────────────
+
+SAMPLE_USER_ID = str(ObjectId())
+
+
+@pytest.fixture
+def sample_user_data() -> dict[str, Any]:
+    """Return a valid user registration payload."""
+    return {
+        "email": "test@example.com",
+        "password": "TestPass123",
+        "full_name": "Test User",
+        "role": "patient",
+    }
+
+
+@pytest.fixture
+def sample_admin_user_data() -> dict[str, Any]:
+    """Return an admin user registration payload."""
+    return {
+        "email": "admin@example.com",
+        "password": "AdminPass123",
+        "full_name": "Admin User",
+        "role": "admin",
+    }
+
+
+@pytest.fixture
+def auth_headers(test_settings: Settings) -> dict[str, str]:
+    """Generate JWT auth headers for a test patient user."""
+    from app.core.security import create_access_token
+    from app.models.user import UserRole
+
+    token = create_access_token(
+        user_id=SAMPLE_USER_ID,
+        role=UserRole.PATIENT,
+    )
+    return {"Authorization": f"Bearer {token}"}
+
+
+@pytest.fixture
+def admin_auth_headers(test_settings: Settings) -> dict[str, str]:
+    """Generate JWT auth headers for an admin user."""
+    from app.core.security import create_access_token
+    from app.models.user import UserRole
+
+    token = create_access_token(
+        user_id=SAMPLE_USER_ID,
+        role=UserRole.ADMIN,
+    )
+    return {"Authorization": f"Bearer {token}"}
+
+
+@pytest.fixture
+def doctor_auth_headers(test_settings: Settings) -> dict[str, str]:
+    """Generate JWT auth headers for a doctor user."""
+    from app.core.security import create_access_token
+    from app.models.user import UserRole
+
+    token = create_access_token(
+        user_id=SAMPLE_USER_ID,
+        role=UserRole.DOCTOR,
+    )
+    return {"Authorization": f"Bearer {token}"}
+
+
+@pytest.fixture(autouse=True)
+def _reset_rate_limiter():
+    """Reset rate limiter state between tests."""
+    from app.core.rate_limiter import reset_rate_limiter
+    reset_rate_limiter()
+    yield
+    reset_rate_limiter()
+
+
+@pytest.fixture(autouse=True)
+def _reset_encryption():
+    """Reset field encryptor singleton between tests."""
+    from app.core.encryption import reset_field_encryptor
+    reset_field_encryptor()
+    yield
+    reset_field_encryptor()
+

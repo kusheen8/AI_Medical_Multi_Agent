@@ -3,7 +3,9 @@ AI Medical Multi-Agent Backend — FastAPI Application Entry Point.
 
 Bootstraps the application with:
 - Lifespan context manager for startup/shutdown hooks
-- CORS middleware
+- CORS middleware (restricted origins)
+- Security headers middleware (Phase 5)
+- Rate limiting middleware (Phase 5)
 - Request correlation middleware
 - Audit logging middleware
 - Health check route registration
@@ -11,6 +13,7 @@ Bootstraps the application with:
 - Audit trail route registration
 - Analysis endpoint registration
 - Alert, Webhook, Metrics, and Admin route registration (Phase 4)
+- Authentication route registration (Phase 5)
 - Worker pool lifecycle management
 - Task queue initialization and crash recovery
 - Risk policy engine and notification service initialization (Phase 4)
@@ -35,6 +38,7 @@ from app.api.v1.routes_admin import router as admin_router
 from app.api.v1.routes_alerts import router as alerts_router
 from app.api.v1.routes_analysis import router as analysis_router
 from app.api.v1.routes_audit import router as audit_router
+from app.api.v1.routes_auth import router as auth_router
 from app.api.v1.routes_health import router as health_router
 from app.api.v1.routes_metrics import router as metrics_router
 from app.api.v1.routes_patients import router as patients_router
@@ -44,6 +48,9 @@ from app.core.audit import AuditMiddleware
 from app.core.config import get_settings
 from app.core.logging import setup_logging
 from app.core.middleware import RequestCorrelationMiddleware
+from app.core.rate_limiter import RateLimitMiddleware
+from app.core.security_headers import SecurityHeadersMiddleware
+from app.core.tracing import setup_tracing
 from app.db.client import AsyncMongoClient
 from app.db.repositories.alert_repository import AlertRepository
 from app.db.repositories.medical_record_repository import MedicalRecordRepository
@@ -143,6 +150,15 @@ async def _create_indexes(db_client: AsyncMongoClient) -> None:
         dlq_col = db_client.get_collection("notification_dlq")
         await dlq_col.create_index("status")
         await dlq_col.create_index("created_at")
+
+        # User indexes (Phase 5)
+        users_col = db_client.get_collection("users")
+        await users_col.create_index("email", unique=True)
+
+        # Token blacklist indexes (Phase 5)
+        blacklist_col = db_client.get_collection("token_blacklist")
+        await blacklist_col.create_index("jti", unique=True)
+        await blacklist_col.create_index("expires_at", expireAfterSeconds=0)
 
         await logger.ainfo("mongodb_indexes_created")
     except Exception:
@@ -357,12 +373,23 @@ def create_app() -> FastAPI:
     )
 
     # ── Middleware (order matters: outermost runs first) ──
+    # CORS — restricted origins (Phase 5 hardening)
+    cors_origins = settings.cors_origins_list if settings.is_production else ["*"]
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],  # tighten in production (Phase 5)
+        allow_origins=cors_origins,
         allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
+        allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+        allow_headers=["Authorization", "Content-Type", "X-Request-ID",
+                       "X-Idempotency-Key", "X-Admin-Key", "Idempotency-Key"],
+    )
+    # Security headers (Phase 5)
+    app.add_middleware(SecurityHeadersMiddleware, app_env=settings.APP_ENV)
+    # Rate limiting (Phase 5)
+    app.add_middleware(
+        RateLimitMiddleware,
+        login_limit=settings.RATE_LIMIT_LOGIN,
+        api_limit=settings.RATE_LIMIT_API,
     )
     app.add_middleware(AuditMiddleware)
     app.add_middleware(RequestCorrelationMiddleware)
@@ -381,6 +408,11 @@ def create_app() -> FastAPI:
     app.include_router(webhooks_router)
     app.include_router(metrics_router)
     app.include_router(admin_router)
+    # Phase 5 routers
+    app.include_router(auth_router)
+
+    # ── Phase 5: Distributed Tracing ──
+    setup_tracing(app)
 
     return app
 

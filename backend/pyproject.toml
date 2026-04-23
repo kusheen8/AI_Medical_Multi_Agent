@@ -5,7 +5,7 @@ description = "AI Medical Multi-Agent backend with hybrid cloud/local medical an
 requires-python = ">=3.10"
 
 [tool.pytest.ini_options]
-testpaths = ["tests/unit", "tests/integration"]
+testpaths = ["tests/unit", "tests/integration", "tests/security", "tests/privacy", "tests/chaos"]
 asyncio_mode = "auto"
 python_files = ["test_*.py"]
 python_functions = ["test_*"]

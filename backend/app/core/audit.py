@@ -97,8 +97,17 @@ class AuditMiddleware(BaseHTTPMiddleware):
         # Get client IP
         ip_address = request.client.host if request.client else "unknown"
 
-        # user_id placeholder — will be replaced by auth in Phase 5
+        # Extract user_id from JWT token (Phase 5 auth integration)
         user_id = "anonymous"
+        auth_header = request.headers.get("Authorization", "")
+        if auth_header.startswith("Bearer "):
+            try:
+                from app.core.security import decode_token
+                token_str = auth_header.removeprefix("Bearer ").strip()
+                payload = decode_token(token_str)
+                user_id = payload.sub
+            except Exception:
+                pass  # Fall back to anonymous on any token error
 
         # Get audit repository from app state
         db_client = request.app.state.db_client

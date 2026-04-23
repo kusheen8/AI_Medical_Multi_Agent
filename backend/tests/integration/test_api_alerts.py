@@ -215,7 +215,7 @@ class TestAdminEndpoints:
 
     def test_health_summary_no_auth(self, test_client: TestClient):
         response = test_client.get("/api/v1/admin/health/summary")
-        assert response.status_code == 422  # Missing required header
+        assert response.status_code == 403  # No JWT or API key provided
 
     def test_health_summary_bad_auth(self, test_client: TestClient):
         response = test_client.get(

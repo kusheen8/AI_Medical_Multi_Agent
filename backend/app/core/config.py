@@ -76,6 +76,28 @@ class Settings(BaseSettings):
     CIRCUIT_BREAKER_FAILURE_THRESHOLD: int = 5
     CIRCUIT_BREAKER_RECOVERY_TIMEOUT: float = 30.0
 
+    # ── Phase 5: Authentication & Authorization ──
+    JWT_SECRET_KEY: str = "dev-secret-key-change-in-production"
+    JWT_ALGORITHM: str = "HS256"
+    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
+    JWT_REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+    REQUIRE_AUTH: bool = False  # Set True in production to enforce auth
+
+    # ── Phase 5: CORS ──
+    CORS_ALLOWED_ORIGINS: str = "http://localhost:3000,http://localhost:8000"
+
+    # ── Phase 5: Rate Limiting ──
+    RATE_LIMIT_LOGIN: int = 100  # requests per minute per IP
+    RATE_LIMIT_API: int = 1000   # requests per minute per authenticated user
+
+    # ── Phase 5: Field Encryption ──
+    FIELD_ENCRYPTION_KEY: str = ""  # Fernet key; generate via Fernet.generate_key()
+
+    @property
+    def cors_origins_list(self) -> list[str]:
+        """Parse comma-separated CORS origins into a list."""
+        return [o.strip() for o in self.CORS_ALLOWED_ORIGINS.split(",") if o.strip()]
+
     @property
     def is_production(self) -> bool:
         """Check if running in production mode."""

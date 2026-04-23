@@ -44,3 +44,12 @@ pytest-cov==6.1.1
 black==25.1.0
 flake8==7.2.0
 mypy==1.15.0
+
+# Distributed Tracing (Phase 5)
+opentelemetry-api==1.28.1
+opentelemetry-sdk==1.28.1
+opentelemetry-instrumentation-fastapi==0.49b1
+opentelemetry-instrumentation-pymongo==0.49b1
+opentelemetry-instrumentation-httpx==0.49b1
+opentelemetry-exporter-otlp==1.28.1
+
