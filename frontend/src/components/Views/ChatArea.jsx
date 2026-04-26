@@ -1,7 +1,7 @@
 import React, { useContext, useState, useRef, useEffect, useCallback } from "react";
 import { AppContext } from "../../context/AppContext";
 import { AGENT_KEYS, AGENT_COLORS, AGENT_ICONS, AGENT_RESPONSES, COLORS } from "../../data/mockData";
-import { getGeminiResponse } from "../../services/geminiService";
+import { getGroqResponse } from "../../services/groqService";
 
 export default function ChatArea() {
   const { lang, T, activeAgent, setActiveAgent, selSymptoms, setSelSymptoms, userData } = useContext(AppContext);
@@ -32,8 +32,8 @@ export default function ChatArea() {
       setTyping(true);
       setTypingAgent("symptom");
       
-      // Call Gemini for symptom check instead of mock
-      getGeminiResponse("symptom", `I am experiencing: ${sympText}. Can you analyze this?`, userData)
+      // Call Groq for symptom check instead of mock
+      getGroqResponse("symptom", `I am experiencing: ${sympText}. Can you analyze this?`, userData)
         .then(aiResponse => {
           setMessages(m => [...m, { role: "ai", agent: "symptom", text: aiResponse }]);
           setTyping(false);
@@ -55,8 +55,8 @@ export default function ChatArea() {
     setTyping(true);
     setTypingAgent(activeAgent);
     
-    // Call Gemini API dynamically using the active agent persona
-    const aiResponse = await getGeminiResponse(activeAgent, userMsg, userData);
+    // Call Groq API dynamically using the active agent persona
+    const aiResponse = await getGroqResponse(activeAgent, userMsg, userData);
     
     setMessages(m => [...m, { role: "ai", agent: activeAgent, text: aiResponse }]);
     setTyping(false); 

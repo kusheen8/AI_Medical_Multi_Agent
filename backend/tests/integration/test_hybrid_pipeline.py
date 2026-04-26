@@ -84,7 +84,7 @@ def mock_task_queue(mock_db_client: MagicMock) -> MagicMock:
 def integration_app(mock_db_client: MagicMock, mock_task_queue: MagicMock) -> any:
     """Create a test app with mocked dependencies for integration testing."""
     with patch.dict(os.environ, {
-        "GEMINI_API_KEY": "test-gemini-key",
+        "GROQ_API_KEY": "test-groq-key",
         "MONGODB_URI": "mongodb://localhost:27017",
     }):
         get_settings.cache_clear()

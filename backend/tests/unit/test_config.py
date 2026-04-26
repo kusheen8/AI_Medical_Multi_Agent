@@ -13,7 +13,7 @@ from app.core.config import Settings, get_settings
 
 # Minimal valid environment for Settings
 VALID_ENV = {
-    "GEMINI_API_KEY": "test-api-key-123",
+    "GROQ_API_KEY": "test-api-key-123",
     "MONGODB_URI": "mongodb://localhost:27017",
     "OLLAMA_BASE_URL": "http://localhost:11434",
     "OLLAMA_MODEL": "medgemma:4b",
@@ -28,7 +28,7 @@ class TestSettings:
         with patch.dict(os.environ, VALID_ENV, clear=False):
             settings = Settings()  # type: ignore[call-arg]
 
-        assert settings.GEMINI_API_KEY == "test-api-key-123"
+        assert settings.GROQ_API_KEY == "test-api-key-123"
         assert settings.MONGODB_URI == "mongodb://localhost:27017"
         assert settings.OLLAMA_BASE_URL == "http://localhost:11434"
         assert settings.OLLAMA_MODEL == "medgemma:4b"
@@ -47,12 +47,12 @@ class TestSettings:
         assert settings.MONGODB_MAX_POOL_SIZE == 10
 
     def test_settings_missing_gemini_key_raises(self) -> None:
-        """Settings should fail validation when GEMINI_API_KEY is missing."""
-        env = {k: v for k, v in VALID_ENV.items() if k != "GEMINI_API_KEY"}
+        """Settings should fail validation when GROQ_API_KEY is missing."""
+        env = {k: v for k, v in VALID_ENV.items() if k != "GROQ_API_KEY"}
         with patch.dict(os.environ, env, clear=True):
             with pytest.raises(ValidationError) as exc_info:
                 Settings()  # type: ignore[call-arg]
-        assert "GEMINI_API_KEY" in str(exc_info.value)
+        assert "GROQ_API_KEY" in str(exc_info.value)
 
     def test_settings_missing_mongodb_uri_raises(self) -> None:
         """Settings should fail validation when MONGODB_URI is missing."""

@@ -39,14 +39,14 @@ def mock_queue() -> MagicMock:
 
 @pytest.fixture
 def mock_coordinator() -> MagicMock:
-    from app.services.coordinator.gemini_coordinator import GeminiCoordinator
+    from app.services.coordinator.groq_coordinator import GroqCoordinator
 
-    coordinator = MagicMock(spec=GeminiCoordinator)
+    coordinator = MagicMock(spec=GroqCoordinator)
     coordinator.generate_reasoning_trace = AsyncMock(return_value={
         "task_type": "symptom_analysis",
         "instructions": "Analyze cardiovascular symptoms.",
         "allowed_data_classes": ["vitals", "symptoms"],
-        "origin": "gemini_coordinator",
+        "origin": "groq_coordinator",
     })
     return coordinator
 
@@ -301,7 +301,7 @@ class TestSummarizationWorker:
             "task_type": "history_summarization",
             "instructions": "Summarize history.",
             "allowed_data_classes": [],
-            "origin": "gemini_coordinator",
+            "origin": "groq_coordinator",
         })
         mock_trace_repo.create_trace = AsyncMock(return_value={"_id": ObjectId()})
 

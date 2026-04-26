@@ -1,5 +1,5 @@
-"""Coordinator service package — cloud-based reasoning trace generation."""
+"""Coordinator services for reasoning trace generation."""
 
-from app.services.coordinator.gemini_coordinator import GeminiCoordinator
+from app.services.coordinator.groq_coordinator import GroqCoordinator
 
-__all__ = ["GeminiCoordinator"]
+__all__ = ["GroqCoordinator"]

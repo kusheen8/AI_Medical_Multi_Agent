@@ -13,7 +13,7 @@ from app.core.config import Settings
 
 # Minimal valid environment for Settings
 VALID_ENV = {
-    "GEMINI_API_KEY": "test-key",
+    "GROQ_API_KEY": "test-key",
     "MONGODB_URI": "mongodb://localhost:27017",
     "OLLAMA_BASE_URL": "http://localhost:11434",
     "OLLAMA_MODEL": "medgemma:4b",

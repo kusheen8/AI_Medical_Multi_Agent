@@ -32,7 +32,7 @@ class Settings(BaseSettings):
     LOG_LEVEL: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
 
     # ── Cloud LLM (required) ──
-    GEMINI_API_KEY: str
+    GROQ_API_KEY: str
 
     # ── Database (required) ──
     MONGODB_URI: str
@@ -46,7 +46,7 @@ class Settings(BaseSettings):
     OLLAMA_TIMEOUT: int = 30
 
     # ── Cloud Coordinator ──
-    GEMINI_MODEL: str = "gemini-1.5-flash"
+    GROQ_MODEL: str = "llama3-8b-8192"
     COORDINATOR_TIMEOUT: int = 5
 
     # ── Worker Pool ──

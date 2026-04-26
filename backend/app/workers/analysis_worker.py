@@ -24,7 +24,7 @@ from app.db.repositories.alert_repository import AlertRepository
 from app.db.repositories.medical_record_repository import MedicalRecordRepository
 from app.db.repositories.patient_repository import PatientRepository
 from app.db.repositories.trace_repository import TraceRepository
-from app.services.coordinator.gemini_coordinator import GeminiCoordinator
+from app.services.coordinator.groq_coordinator import GroqCoordinator
 from app.services.local_agents.medical_analyzer import MedicalAnalyzer
 from app.services.metrics import MetricsCollector
 from app.services.notifications.caregiver_notifier import CaregiverNotifier
@@ -60,7 +60,7 @@ class AnalysisWorker:
         self,
         worker_id: str,
         queue: TaskQueue,
-        coordinator: GeminiCoordinator,
+        coordinator: GroqCoordinator,
         analyzer: MedicalAnalyzer,
         patient_repo: PatientRepository,
         record_repo: MedicalRecordRepository,

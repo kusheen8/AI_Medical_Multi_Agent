@@ -17,7 +17,7 @@ import structlog
 
 from app.db.repositories.patient_repository import PatientRepository
 from app.db.repositories.trace_repository import TraceRepository
-from app.services.coordinator.gemini_coordinator import GeminiCoordinator
+from app.services.coordinator.groq_coordinator import GroqCoordinator
 from app.services.local_agents.history_summarizer import HistorySummarizer
 from app.services.queue.task_queue import TaskQueue
 from app.services.queue.task_schema import TaskType
@@ -42,7 +42,7 @@ class SummarizationWorker:
         self,
         worker_id: str,
         queue: TaskQueue,
-        coordinator: GeminiCoordinator,
+        coordinator: GroqCoordinator,
         summarizer: HistorySummarizer,
         patient_repo: PatientRepository,
         trace_repo: TraceRepository,

@@ -41,7 +41,7 @@ def test_settings() -> Settings:
         APP_VERSION="0.0.1",
         APP_ENV="development",
         LOG_LEVEL="DEBUG",
-        GEMINI_API_KEY="test-gemini-key",
+        GROQ_API_KEY="test-groq-key",
         MONGODB_URI="mongodb://localhost:27017",
         MONGODB_DB_NAME="test_ai_medical",
         OLLAMA_BASE_URL="http://localhost:11434",
@@ -101,7 +101,7 @@ def mock_db_client(mock_collection: MagicMock) -> MagicMock:
 def test_app(mock_db_client: MagicMock, test_settings: Settings) -> Any:
     """Create a FastAPI test app with mocked dependencies."""
     with patch.dict(os.environ, {
-        "GEMINI_API_KEY": "test-gemini-key",
+        "GROQ_API_KEY": "test-groq-key",
         "MONGODB_URI": "mongodb://localhost:27017",
     }):
         get_settings.cache_clear()

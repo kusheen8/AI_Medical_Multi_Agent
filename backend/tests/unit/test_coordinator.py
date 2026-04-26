@@ -1,7 +1,7 @@
 """
-Unit tests for GeminiCoordinator (services/coordinator/).
+Unit tests for GroqCoordinator (services/coordinator/).
 
-Tests with mocked Gemini API responses:
+Tests with mocked Groq API responses:
 - Reasoning trace generation for symptom analysis
 - Reasoning trace generation for history summarization
 - Prompt template rendering
@@ -14,13 +14,15 @@ from datetime import datetime, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+import groq
 
 from app.core.config import Settings
 from app.core.privacy import PHILeakageError
-from app.services.coordinator.gemini_coordinator import (
+from app.services.coordinator.groq_coordinator import (
     CoordinatorError,
     CoordinatorTimeoutError,
-    GeminiCoordinator,
+    CoordinatorRateLimitError,
+    GroqCoordinator,
 )
 from app.services.coordinator.prompts import (
     format_history_summarization_prompt,
@@ -32,9 +34,9 @@ from app.services.privacy_filter import PrivacyFilter
 @pytest.fixture
 def test_settings() -> Settings:
     return Settings(
-        GEMINI_API_KEY="test-key",
+        GROQ_API_KEY="test-key",
         MONGODB_URI="mongodb://localhost:27017",
-        GEMINI_MODEL="gemini-1.5-flash",
+        GROQ_MODEL="llama3-8b-8192",
         COORDINATOR_TIMEOUT=5,
     )
 
@@ -113,14 +115,14 @@ class TestPromptTemplates:
         assert "chest pain" not in user_prompt
 
 
-# ── GeminiCoordinator Tests ──────────────────────────────────────────────
+# ── GroqCoordinator Tests ──────────────────────────────────────────────
 
 
-class TestGeminiCoordinator:
-    """Tests for the GeminiCoordinator with mocked Gemini API."""
+class TestGroqCoordinator:
+    """Tests for the GroqCoordinator with mocked Groq API."""
 
     @pytest.fixture
-    def mock_gemini_response(self) -> str:
+    def mock_groq_response(self) -> str:
         return json.dumps({
             "instructions": "1. Analyze cardiovascular symptoms. 2. Check risk factors.",
             "allowed_data_classes": ["vitals", "symptoms", "medications"],
@@ -129,29 +131,26 @@ class TestGeminiCoordinator:
             "recommended_analyses": ["ECG", "blood panel"],
         })
 
-    @patch("app.services.coordinator.gemini_coordinator.genai")
+    @patch("app.services.coordinator.groq_coordinator.AsyncGroq")
     @pytest.mark.asyncio
     async def test_generate_trace_success(
-        self, mock_genai: MagicMock, test_settings: Settings,
+        self, mock_async_groq: MagicMock, test_settings: Settings,
         mock_privacy_filter: PrivacyFilter, sample_patient_doc: dict,
-        mock_gemini_response: str,
+        mock_groq_response: str,
     ) -> None:
         # Setup mock
-        mock_response = MagicMock()
-        mock_response.text = mock_gemini_response
+        mock_client_instance = AsyncMock()
+        mock_chat_completion = MagicMock()
+        mock_chat_completion.choices = [
+            MagicMock(message=MagicMock(content=mock_groq_response))
+        ]
+        mock_client_instance.chat.completions.create = AsyncMock(return_value=mock_chat_completion)
+        mock_async_groq.return_value = mock_client_instance
 
-        mock_model = AsyncMock()
-        mock_model.generate_content = AsyncMock(return_value=mock_response)
-
-        mock_client = MagicMock()
-        mock_client.aio.models = mock_model
-        mock_genai.Client.return_value = mock_client
-
-        coordinator = GeminiCoordinator(
+        coordinator = GroqCoordinator(
             settings=test_settings,
             privacy_filter=mock_privacy_filter,
         )
-        coordinator._client = mock_client
 
         result = await coordinator.generate_reasoning_trace(
             task_type="symptom_analysis",
@@ -160,42 +159,40 @@ class TestGeminiCoordinator:
         )
 
         assert result["task_type"] == "symptom_analysis"
-        assert result["origin"] == "gemini_coordinator"
+        assert result["origin"] == "groq_coordinator"
         assert "instructions" in result
         assert "allowed_data_classes" in result
         assert result["expires_at"] is not None
 
-    @patch("app.services.coordinator.gemini_coordinator.genai")
+    @patch("app.services.coordinator.groq_coordinator.AsyncGroq")
     @pytest.mark.asyncio
     async def test_generate_trace_no_phi_in_request(
-        self, mock_genai: MagicMock, test_settings: Settings,
+        self, mock_async_groq: MagicMock, test_settings: Settings,
         mock_privacy_filter: PrivacyFilter, sample_patient_doc: dict,
-        mock_gemini_response: str,
+        mock_groq_response: str,
     ) -> None:
-        # Track what prompts are sent to Gemini
+        # Track what prompts are sent to Groq
         sent_prompts: list[str] = []
 
-        mock_response = MagicMock()
-        mock_response.text = mock_gemini_response
+        mock_client_instance = AsyncMock()
+        mock_chat_completion = MagicMock()
+        mock_chat_completion.choices = [
+            MagicMock(message=MagicMock(content=mock_groq_response))
+        ]
 
-        mock_model = AsyncMock()
+        async def capture_create(*args, **kwargs):
+            messages = kwargs.get("messages", [])
+            for msg in messages:
+                sent_prompts.append(msg["content"])
+            return mock_chat_completion
 
-        async def capture_generate(*args, **kwargs):
-            contents = kwargs.get("contents") or (args[1] if len(args) > 1 else "")
-            sent_prompts.append(str(contents))
-            return mock_response
+        mock_client_instance.chat.completions.create = capture_create
+        mock_async_groq.return_value = mock_client_instance
 
-        mock_model.generate_content = capture_generate
-
-        mock_client = MagicMock()
-        mock_client.aio.models = mock_model
-        mock_genai.Client.return_value = mock_client
-
-        coordinator = GeminiCoordinator(
+        coordinator = GroqCoordinator(
             settings=test_settings,
             privacy_filter=mock_privacy_filter,
         )
-        coordinator._client = mock_client
 
         await coordinator.generate_reasoning_trace(
             task_type="symptom_analysis",
@@ -209,15 +206,15 @@ class TestGeminiCoordinator:
             assert "1985-03-15" not in prompt
             assert "chest pain" not in prompt  # Raw symptoms should be categorized
 
-    @patch("app.services.coordinator.gemini_coordinator.genai")
+    @patch("app.services.coordinator.groq_coordinator.AsyncGroq")
     @pytest.mark.asyncio
     async def test_generate_trace_unknown_task_type(
-        self, mock_genai: MagicMock, test_settings: Settings,
+        self, mock_async_groq: MagicMock, test_settings: Settings,
         mock_privacy_filter: PrivacyFilter, sample_patient_doc: dict,
     ) -> None:
-        mock_genai.Client.return_value = MagicMock()
+        mock_async_groq.return_value = MagicMock()
 
-        coordinator = GeminiCoordinator(
+        coordinator = GroqCoordinator(
             settings=test_settings,
             privacy_filter=mock_privacy_filter,
         )
@@ -229,7 +226,7 @@ class TestGeminiCoordinator:
             )
 
     def test_parse_response_valid_json(self, test_settings: Settings) -> None:
-        coordinator = GeminiCoordinator(settings=test_settings)
+        coordinator = GroqCoordinator(settings=test_settings)
         response = json.dumps({
             "instructions": "Step 1: Analyze symptoms",
             "allowed_data_classes": ["vitals"],
@@ -239,13 +236,13 @@ class TestGeminiCoordinator:
         assert result["allowed_data_classes"] == ["vitals"]
 
     def test_parse_response_json_in_code_block(self, test_settings: Settings) -> None:
-        coordinator = GeminiCoordinator(settings=test_settings)
+        coordinator = GroqCoordinator(settings=test_settings)
         response = '```json\n{"instructions": "test", "allowed_data_classes": []}\n```'
         result = coordinator._parse_response(response, "symptom_analysis")
         assert result["instructions"] == "test"
 
     def test_parse_response_invalid_json_fallback(self, test_settings: Settings) -> None:
-        coordinator = GeminiCoordinator(settings=test_settings)
+        coordinator = GroqCoordinator(settings=test_settings)
         response = "This is not JSON, but it has analysis instructions."
         result = coordinator._parse_response(response, "symptom_analysis")
         assert result["instructions"] == response

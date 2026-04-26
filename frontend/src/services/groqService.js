@@ -1,11 +1,11 @@
 // Use straight fetch for robust Vite front-end compatibility, 
 // bypassing any Node-specific SDK checks in the browser.
 
-export const getGeminiResponse = async (agentKey, userMessage, contextData) => {
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+export const getGroqResponse = async (agentKey, userMessage, contextData) => {
+  const apiKey = import.meta.env.VITE_GROQ_API_KEY;
   
   if (!apiKey || apiKey === "your_actual_key") {
-    return "API Key is missing or invalid. Please add your VITE_GEMINI_API_KEY to .env.local";
+    return "API Key is missing or invalid. Please add your VITE_GROQ_API_KEY to .env.local";
   }
 
   const roles = {
@@ -25,32 +25,30 @@ export const getGeminiResponse = async (agentKey, userMessage, contextData) => {
   `;
 
   try {
-    const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + apiKey, {
+    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        system_instruction: {
-          parts: [{ text: systemInstruction }]
-        },
-        contents: [{
-          parts: [{ text: userMessage }]
-        }],
-        generationConfig: {
-          temperature: 0.3
-        }
+        model: "llama3-8b-8192",
+        messages: [
+          { role: "system", content: systemInstruction },
+          { role: "user", content: userMessage }
+        ],
+        temperature: 0.3
       })
     });
 
     const data = await response.json();
     
     if (data.error) {
-      console.error("Gemini API Error:", data.error);
+      console.error("Groq API Error:", data.error);
       return "Error: " + data.error.message;
     }
 
-    return data.candidates[0].content.parts[0].text;
+    return data.choices[0].message.content;
   } catch (error) {
     console.error("Fetch Error:", error);
     return "I'm currently unable to connect to the medical knowledge base. Please check your network or API key.";

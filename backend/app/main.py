@@ -58,7 +58,7 @@ from app.db.repositories.patient_repository import PatientRepository
 from app.db.repositories.policy_repository import PolicyRepository
 from app.db.repositories.trace_repository import TraceRepository
 from app.services.circuit_breaker import get_circuit_breaker
-from app.services.coordinator.gemini_coordinator import GeminiCoordinator
+from app.services.coordinator.groq_coordinator import GroqCoordinator
 from app.services.health_service import HealthService
 from app.services.local_agents.medical_analyzer import MedicalAnalyzer
 from app.services.local_agents.history_summarizer import HistorySummarizer
@@ -202,7 +202,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
     # ── Phase 3: Initialize pipeline services ──
     privacy_filter = PrivacyFilter()
-    coordinator = GeminiCoordinator(settings=settings, privacy_filter=privacy_filter)
+    coordinator = GroqCoordinator(settings=settings, privacy_filter=privacy_filter)
     ollama_client = OllamaClient(settings=settings)
 
     # Repositories

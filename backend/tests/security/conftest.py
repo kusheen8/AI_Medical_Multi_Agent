@@ -12,7 +12,7 @@ from app.core.config import get_settings
 def _patch_settings_env():
     """Ensure env vars exist so get_settings() works in unit tests."""
     with patch.dict(os.environ, {
-        "GEMINI_API_KEY": "test-gemini-key",
+        "GROQ_API_KEY": "test-groq-key",
         "MONGODB_URI": "mongodb://localhost:27017",
         "JWT_SECRET_KEY": "test-jwt-secret-key-for-testing-only",
     }):
