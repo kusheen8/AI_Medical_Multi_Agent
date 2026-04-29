@@ -46,7 +46,7 @@ class Settings(BaseSettings):
     OLLAMA_TIMEOUT: int = 30
 
     # ── Cloud Coordinator ──
-    GROQ_MODEL: str = "llama3-8b-8192"
+    GROQ_MODEL: str = "meta-llama/llama-4-scout-17b-16e-instruct"
     COORDINATOR_TIMEOUT: int = 5
 
     # ── Worker Pool ──

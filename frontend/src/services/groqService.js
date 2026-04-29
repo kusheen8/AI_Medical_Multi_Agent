@@ -32,7 +32,7 @@ export const getGroqResponse = async (agentKey, userMessage, contextData) => {
         'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: "llama3-8b-8192",
+        model: "meta-llama/llama-4-scout-17b-16e-instruct",
         messages: [
           { role: "system", content: systemInstruction },
           { role: "user", content: userMessage }

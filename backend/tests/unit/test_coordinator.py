@@ -36,7 +36,7 @@ def test_settings() -> Settings:
     return Settings(
         GROQ_API_KEY="test-key",
         MONGODB_URI="mongodb://localhost:27017",
-        GROQ_MODEL="llama3-8b-8192",
+        GROQ_MODEL="meta-llama/llama-4-scout-17b-16e-instruct",
         COORDINATOR_TIMEOUT=5,
     )
 
